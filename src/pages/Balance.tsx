@@ -89,7 +89,7 @@ export const Balance: React.FC = () => {
               ) : (
                 <h2 className="mt-1 text-5xl font-bold text-slate-50">
                   $
-                  {balance?.balance?.toLocaleString(undefined, {
+                  {balance?.amount?.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                   }) ?? "0.00"}
                 </h2>
