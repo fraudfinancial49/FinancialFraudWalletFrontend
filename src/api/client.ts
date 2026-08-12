@@ -17,21 +17,31 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       logoutCustomer();
-      window.location.href = "/login"; // Redirects to login
+      if (typeof window !== "undefined") {
+        window.location.href = "/login";
+      }
     }
     return Promise.reject(error);
   }
 );
 
-// Define expected response shapes
+// --- Interfaces ---
 export interface AuthResponse {
   access_token: string;
   account_id: string;
+  full_name?: string;
 }
 
 export interface BalanceResponse {
   balance: number;
   currency: string;
+}
+
+// --- API Endpoints ---
+export async function registerCustomer(name: string, email: string, password: string): Promise<AuthResponse> {
+  // Note: Mapped 'name' to 'full_name' to perfectly match the backend Pydantic schema
+  const { data } = await apiClient.post<AuthResponse>("/api/v1/customer/register", { full_name: name, email, password });
+  return data;
 }
 
 export async function loginCustomer(email: string, password: string): Promise<AuthResponse> {
@@ -58,7 +68,6 @@ export async function getMyTransactions(page = 1, pageSize = 25) {
   return data;
 }
 
-// Reuses Part 1's existing endpoint as-is.
 export async function assessTransaction(payload: {
   nameDest: string; amount: number; type: string;
 }) {
