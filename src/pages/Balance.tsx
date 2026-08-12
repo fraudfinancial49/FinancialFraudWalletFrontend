@@ -12,9 +12,19 @@ import type { BalanceOut } from "@/types/api";
 export const Balance: React.FC = () => {
   const [balance, setBalance] = useState<BalanceOut | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBalance = () => {
+    setLoading(true);
+    setError(null);
+    getMyBalance()
+      .then(setBalance)
+      .catch(() => setError("Unable to reach the backend. It may be waking up."))
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
-    getMyBalance().then(setBalance).finally(() => setLoading(false));
+    fetchBalance();
   }, []);
 
   return (
@@ -31,8 +41,8 @@ export const Balance: React.FC = () => {
             </p>
           </div>
 
-          <button className="btn-secondary">
-            <RefreshCw className="h-4 w-4" />
+          <button onClick={fetchBalance} disabled={loading} className="btn-secondary flex items-center gap-2">
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
         </div>
@@ -52,12 +62,16 @@ export const Balance: React.FC = () => {
                 <p className="mt-2 text-lg text-slate-400">
                   Loading...
                 </p>
+              ) : error ? (
+                <p className="mt-2 text-lg text-red-500">
+                  {error}
+                </p>
               ) : (
                 <h2 className="mt-1 text-5xl font-bold text-slate-50">
                   $
-                  {balance?.balance.toLocaleString(undefined, {
+                  {balance?.balance?.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
-                  })}
+                  }) ?? "0.00"}
                 </h2>
               )}
             </div>
@@ -76,7 +90,7 @@ export const Balance: React.FC = () => {
               Send money securely with AI-powered fraud detection.
             </p>
 
-            <button className="btn-primary mt-5 w-full justify-center">
+            <button onClick={() => window.location.href='/pay'} className="btn-primary flex items-center mt-5 w-full justify-center gap-2">
               <ArrowUpRight className="h-4 w-4" />
               Send Money
             </button>
@@ -93,7 +107,7 @@ export const Balance: React.FC = () => {
               AI Fraud Protection is active for your account.
             </p>
 
-            <div className="badge mt-5 bg-risk-low/15 text-risk-low">
+            <div className="badge inline-block mt-5 bg-risk-low/15 text-risk-low">
               Protected
             </div>
           </div>
@@ -109,7 +123,7 @@ export const Balance: React.FC = () => {
               View your recent transactions and account activity.
             </p>
 
-            <button className="btn-secondary mt-5 w-full justify-center">
+            <button onClick={() => window.location.href='/history'} className="btn-secondary mt-5 w-full justify-center">
               View History
             </button>
           </div>
