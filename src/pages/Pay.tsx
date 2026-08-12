@@ -19,6 +19,7 @@ export const Pay: React.FC = () => {
   const [result, setResult] = useState<AssessResponse | null>(null);
   const [otp, setOtp] = useState("");
   const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // NEW: Dedicated error state
   const [loading, setLoading] = useState(false);
 
   async function submitPayment(e: React.FormEvent) {
@@ -26,6 +27,7 @@ export const Pay: React.FC = () => {
 
     setLoading(true);
     setStatus(null);
+    setError(null); // NEW: Clear previous errors
 
     try {
       const res = await assessTransaction({
@@ -62,7 +64,8 @@ export const Pay: React.FC = () => {
           setStatus("Transaction submitted.");
       }
     } catch (err: any) {
-      setStatus(
+      // NEW: Set the error state instead of the general status state
+      setError(
         err?.response?.data?.detail ?? "Payment failed."
       );
     } finally {
@@ -76,6 +79,7 @@ export const Pay: React.FC = () => {
     if (!result) return;
 
     setLoading(true);
+    setError(null); // NEW: Clear errors on OTP submit
 
     try {
       await verifyOtp(result.transaction_id, otp);
@@ -85,7 +89,8 @@ export const Pay: React.FC = () => {
       setResult(null);
       setOtp("");
     } catch (err: any) {
-      setStatus(
+      // NEW: Set the error state for OTP failures
+      setError(
         err?.response?.data?.detail ?? "Incorrect OTP."
       );
     } finally {
@@ -123,8 +128,9 @@ export const Pay: React.FC = () => {
                   Recipient Account
                 </label>
 
+                {/* NEW: Added conditional border color if there is an error */}
                 <input
-                  className="input-field"
+                  className={`input-field ${error ? "border-risk-high/50 focus:border-risk-high" : ""}`}
                   placeholder="Recipient Account ID"
                   value={nameDest}
                   onChange={(e) =>
@@ -219,8 +225,9 @@ export const Pay: React.FC = () => {
                   One-Time Password
                 </label>
 
+                {/* NEW: Added conditional border color if there is an error */}
                 <input
-                  className="input-field text-center text-lg tracking-[0.4em]"
+                  className={`input-field text-center text-lg tracking-[0.4em] ${error ? "border-risk-high/50 focus:border-risk-high" : ""}`}
                   placeholder="123456"
                   maxLength={6}
                   value={otp}
@@ -246,7 +253,23 @@ export const Pay: React.FC = () => {
           )}
         </div>
 
-        {status && (
+        {/* NEW: Dedicated Error Display Box */}
+        {error && (
+          <div className="panel border border-risk-high/30 bg-risk-high/10 p-5 shadow-sm shadow-risk-high/5">
+            <div className="flex items-start gap-3">
+              <Ban className="mt-0.5 h-6 w-6 text-risk-high shrink-0" />
+              <div>
+                <h3 className="text-lg font-semibold text-risk-high">
+                  Transaction Failed
+                </h3>
+                <p className="mt-1 text-slate-300">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Updated: Only show general status if there is NO error */}
+        {status && !error && (
           <div className="panel p-5">
             <div className="flex items-center gap-3">
               {decision === "approve" && (
