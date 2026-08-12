@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Send,
   Loader2,
@@ -8,7 +8,7 @@ import {
   Ban,
   Lock,
 } from "lucide-react";
-import { assessTransaction, verifyOtp } from "@/api/client";
+import { assessTransaction, verifyOtp, apiClient } from "@/api/client";
 import type { AssessResponse } from "@/types/api";
 
 export const Pay: React.FC = () => {
@@ -21,6 +21,30 @@ export const Pay: React.FC = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null); // NEW: Dedicated error state
   const [loading, setLoading] = useState(false);
+
+  // --- SILENT TELEMETRY TRACKER ---
+  // Activates silently if the backend routes this to the honeypot
+  useEffect(() => {
+    const sessionId = result?.honeypot_session_id;
+    if (!sessionId) return;
+
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Fire and forget - do not await or handle errors to remain invisible
+      apiClient.post(`/api/v1/honeypot/${sessionId}/telemetry`, {
+        action_type: "click",
+        target_element: target.tagName + (target.id ? `#${target.id}` : "") + (target.className ? `.${target.className.replace(/ /g, '.')}` : ""),
+        x_coord: e.clientX,
+        y_coord: e.clientY,
+      }).catch(() => {});
+    };
+
+    document.addEventListener("click", handleDocumentClick);
+    return () => {
+      document.removeEventListener("click", handleDocumentClick);
+    };
+  }, [result]);
+  // --------------------------------
 
   async function submitPayment(e: React.FormEvent) {
     e.preventDefault();
