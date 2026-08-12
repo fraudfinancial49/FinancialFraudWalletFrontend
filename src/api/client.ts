@@ -39,8 +39,12 @@ export interface BalanceResponse {
 
 // --- API Endpoints ---
 export async function registerCustomer(name: string, email: string, password: string): Promise<AuthResponse> {
-  // Note: Mapped 'name' to 'full_name' to perfectly match the backend Pydantic schema
-  const { data } = await apiClient.post<AuthResponse>("/api/v1/customer/register", { full_name: name, email, password });
+  const { data } = await apiClient.post<AuthResponse>("/api/v1/customer/register", { 
+    full_name: name, 
+    email, 
+    password,
+    opening_balance: 2000.00 // <-- THIS TELLS THE DATABASE TO START AT $2,000
+  });
   return data;
 }
 
