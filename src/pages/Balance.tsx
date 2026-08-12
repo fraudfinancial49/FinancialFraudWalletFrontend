@@ -5,6 +5,8 @@ import {
   ArrowUpRight,
   ShieldCheck,
   RefreshCw,
+  Copy,
+  CheckCircle2,
 } from "lucide-react";
 import { getMyBalance } from "@/api/client";
 import type { BalanceOut } from "@/types/api";
@@ -13,6 +15,10 @@ export const Balance: React.FC = () => {
   const [balance, setBalance] = useState<BalanceOut | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Retrieve the Account ID that was saved during login/registration
+  const accountId = localStorage.getItem("customer_account_id") || "Unknown Account";
 
   const fetchBalance = () => {
     setLoading(true);
@@ -27,18 +33,32 @@ export const Balance: React.FC = () => {
     fetchBalance();
   }, []);
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(accountId);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-vault-950 p-8">
       <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-50">
               Welcome Back
             </h1>
-
-            <p className="mt-1 text-slate-400">
-              View your balance and securely manage your account.
-            </p>
+            
+            {/* NEW: Account ID Display with Copy Button */}
+            <div className="mt-2 flex items-center gap-2 text-sm text-slate-400">
+              <span>Account ID: <strong className="font-mono text-slate-200">{accountId}</strong></span>
+              <button 
+                onClick={handleCopy} 
+                className="rounded p-1 transition-colors hover:bg-vault-800 hover:text-slate-200"
+                title="Copy Account ID"
+              >
+                {copied ? <CheckCircle2 className="h-4 w-4 text-risk-low" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
 
           <button onClick={fetchBalance} disabled={loading} className="btn-secondary flex items-center gap-2">
