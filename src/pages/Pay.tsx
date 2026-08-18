@@ -8,10 +8,12 @@ import {
   Ban,
   Lock,
 } from "lucide-react";
-import { assessTransaction, verifyOtp, apiClient } from "@/api/client";
+import { assessTransaction, verifyOtp } from "@/api/client";
+import { useTelemetry } from "@/context/TelemetryContext";
 import type { AssessResponse } from "@/types/api";
 
 export const Pay: React.FC = () => {
+  const { setHoneypotSessionId } = useTelemetry();
   const [nameDest, setNameDest] = useState("");
   const [amount, setAmount] = useState("");
   const [type, setType] = useState("TRANSFER");
@@ -22,29 +24,12 @@ export const Pay: React.FC = () => {
   const [error, setError] = useState<string | null>(null); // NEW: Dedicated error state
   const [loading, setLoading] = useState(false);
 
-  // --- SILENT TELEMETRY TRACKER ---
-  // Activates silently if the backend routes this to the honeypot
+  // The global click listener (mounted once at the app root, active on every
+  // page) reads its target session id from TelemetryContext -- this just keeps
+  // that context in sync with whatever the most recent assessment produced.
   useEffect(() => {
-    const sessionId = result?.honeypot_session_id;
-    if (!sessionId) return;
-
-    const handleDocumentClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Fire and forget - do not await or handle errors to remain invisible
-      apiClient.post(`/api/v1/honeypot/${sessionId}/telemetry`, {
-        action_type: "click",
-        target_element: target.tagName + (target.id ? `#${target.id}` : "") + (target.className ? `.${target.className.replace(/ /g, '.')}` : ""),
-        x_coord: e.clientX,
-        y_coord: e.clientY,
-      }).catch(() => {});
-    };
-
-    document.addEventListener("click", handleDocumentClick);
-    return () => {
-      document.removeEventListener("click", handleDocumentClick);
-    };
-  }, [result]);
-  // --------------------------------
+    setHoneypotSessionId(result?.honeypot_session_id);
+  }, [result, setHoneypotSessionId]);
 
   async function submitPayment(e: React.FormEvent) {
     e.preventDefault();
@@ -71,17 +56,16 @@ export const Pay: React.FC = () => {
           setStatus("OTP verification required.");
           break;
 
-        case "manual_review":
-          setStatus(
-            "Your transaction has been sent for manual review."
-          );
-          break;
-
         case "auto_reject":
-        case "blocked":
           setStatus(
             "Transaction blocked due to suspicious activity."
           );
+          break;
+
+        case "honeypot":
+          // Deliberately identical to the "approve" message -- the honeypot's
+          // whole purpose is to look like a normal successful transfer.
+          setStatus("Payment approved successfully.");
           break;
 
         default:
@@ -253,11 +237,14 @@ export const Pay: React.FC = () => {
                 <input
                   className={`input-field text-center text-lg tracking-[0.4em] ${error ? "border-risk-high/50 focus:border-risk-high" : ""}`}
                   placeholder="123456"
+                  inputMode="numeric"
+                  pattern="[0-9]{6}"
                   maxLength={6}
                   value={otp}
                   onChange={(e) =>
                     setOtp(e.target.value)
                   }
+                  required
                 />
               </div>
 

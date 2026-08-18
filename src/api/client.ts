@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import type { AssessResponse, BalanceOut, CustomerTransactionOut } from "@/types/api";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://financialfraudbackend.onrender.com";
 
@@ -32,11 +33,6 @@ export interface AuthResponse {
   full_name?: string;
 }
 
-export interface BalanceResponse {
-  balance: number;
-  currency: string;
-}
-
 // --- API Endpoints ---
 export async function registerCustomer(name: string, email: string, password: string): Promise<AuthResponse> {
   const { data } = await apiClient.post<AuthResponse>("/api/v1/customer/register", { 
@@ -60,13 +56,13 @@ export function logoutCustomer(): void {
   localStorage.removeItem("customer_account_id");
 }
 
-export async function getMyBalance(): Promise<BalanceResponse> {
-  const { data } = await apiClient.get<BalanceResponse>("/api/v1/customer/me/balance");
+export async function getMyBalance(): Promise<BalanceOut> {
+  const { data } = await apiClient.get<BalanceOut>("/api/v1/customer/me/balance");
   return data;
 }
 
-export async function getMyTransactions(page = 1, pageSize = 25) {
-  const { data } = await apiClient.get("/api/v1/customer/me/transactions", {
+export async function getMyTransactions(page = 1, pageSize = 25): Promise<CustomerTransactionOut[]> {
+  const { data } = await apiClient.get<CustomerTransactionOut[]>("/api/v1/customer/me/transactions", {
     params: { page, page_size: pageSize },
   });
   return data;
@@ -74,8 +70,8 @@ export async function getMyTransactions(page = 1, pageSize = 25) {
 
 export async function assessTransaction(payload: {
   nameDest: string; amount: number; type: string;
-}) {
-  const { data } = await apiClient.post("/api/v1/transactions/assess", payload);
+}): Promise<AssessResponse> {
+  const { data } = await apiClient.post<AssessResponse>("/api/v1/transactions/assess", payload);
   return data;
 }
 

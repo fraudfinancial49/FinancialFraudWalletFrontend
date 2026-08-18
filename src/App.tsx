@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { TelemetryProvider } from "@/context/TelemetryContext";
 import { Login } from "@/pages/Login";
 import { Pay } from "@/pages/Pay";
 import { Balance } from "@/pages/Balance";
@@ -28,14 +29,16 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Nav />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/pay" element={<Protected><Pay /></Protected>} />
-          <Route path="/balance" element={<Protected><Balance /></Protected>} />
-          <Route path="/history" element={<Protected><History /></Protected>} />
-          <Route path="*" element={<Navigate to="/balance" replace />} />
-        </Routes>
+        <TelemetryProvider>
+          <Nav />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/pay" element={<Protected><Pay /></Protected>} />
+            <Route path="/balance" element={<Protected><Balance /></Protected>} />
+            <Route path="/history" element={<Protected><History /></Protected>} />
+            <Route path="*" element={<Navigate to="/balance" replace />} />
+          </Routes>
+        </TelemetryProvider>
       </AuthProvider>
     </BrowserRouter>
   );

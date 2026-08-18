@@ -8,9 +8,11 @@ import {
   Clock3,
 } from "lucide-react";
 import { getMyTransactions } from "@/api/client";
+import { useAuth } from "@/context/AuthContext";
 import type { CustomerTransactionOut } from "@/types/api";
 
 export const History: React.FC = () => {
+  const { accountId } = useAuth();
   const [rows, setRows] = useState<CustomerTransactionOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -126,52 +128,56 @@ export const History: React.FC = () => {
                 </thead>
 
                 <tbody>
-                  {rows.map((r) => (
-                    <tr
-                      key={r.transaction_id}
-                      className="border-t border-vault-800 hover:bg-vault-800/50"
-                    >
-                      <td className="px-5 py-4 text-slate-300">
-                        {new Date(r.timestamp).toLocaleString(undefined, {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </td>
+                  {rows.map((r) => {
+                    const direction = r.name_orig === accountId ? "sent" : "received";
+                    const counterparty = r.name_orig === accountId ? r.name_dest : r.name_orig;
+                    return (
+                      <tr
+                        key={r.id}
+                        className="border-t border-vault-800 hover:bg-vault-800/50"
+                      >
+                        <td className="px-5 py-4 text-slate-300">
+                          {new Date(r.timestamp).toLocaleString(undefined, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </td>
 
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2">
-                          {r.direction?.toLowerCase() === "debit" || r.direction?.toLowerCase() === "sent" ? (
-                            <ArrowUpRight className="h-4 w-4 text-risk-high" />
-                          ) : (
-                            <ArrowDownLeft className="h-4 w-4 text-risk-low" />
-                          )}
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            {direction === "sent" ? (
+                              <ArrowUpRight className="h-4 w-4 text-risk-high" />
+                            ) : (
+                              <ArrowDownLeft className="h-4 w-4 text-risk-low" />
+                            )}
 
-                          <span className="capitalize text-slate-300">
-                            {r.direction || "Unknown"}
-                          </span>
-                        </div>
-                      </td>
+                            <span className="capitalize text-slate-300">
+                              {direction}
+                            </span>
+                          </div>
+                        </td>
 
-                      <td className="px-5 py-4 text-slate-300">
-                        {r.counterparty}
-                      </td>
+                        <td className="px-5 py-4 text-slate-300">
+                          {counterparty}
+                        </td>
 
-                      <td className="px-5 py-4 text-slate-300">
-                        {r.type}
-                      </td>
+                        <td className="px-5 py-4 text-slate-300">
+                          {r.type}
+                        </td>
 
-                      <td className="px-5 py-4 text-right font-semibold text-slate-100">
-                        ${r.amount?.toFixed(2)}
-                      </td>
+                        <td className="px-5 py-4 text-right font-semibold text-slate-100">
+                          ${r.amount?.toFixed(2)}
+                        </td>
 
-                      <td className="px-5 py-4 text-center">
-                        {statusBadge(r.status)}
-                      </td>
-                    </tr>
-                  ))}
+                        <td className="px-5 py-4 text-center">
+                          {statusBadge(r.status)}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

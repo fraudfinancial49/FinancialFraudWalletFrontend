@@ -1,16 +1,16 @@
 export interface BalanceOut {
   account_id: string;
-  balance: number;
+  amount: number;
   updated_at: string;
 }
 
 export interface CustomerTransactionOut {
-  transaction_id: string;
-  direction: "sent" | "received";
-  counterparty: string;
+  id: string;
+  name_orig: string;
+  name_dest: string;
   type: string;
   amount: number;
-  routing_decision: string;
+  routing_decision: string | null;
   status: string;
   timestamp: string;
 }
@@ -22,4 +22,7 @@ export interface AssessResponse {
   message: string;
   vault_id?: string | null;
   auto_reject_id?: string | null;
+  honeypot_session_id?: string | null;
+  individual_scores?: Record<string, number> | null;
+  fusion_weights?: Record<string, number> | null;
 }
