@@ -8,7 +8,7 @@ import {
   Ban,
   Lock,
 } from "lucide-react";
-import { assessTransaction, verifyOtp } from "@/api/client";
+import { assessTransaction, verifyOtp, getMyBalance } from "@/api/client";
 import { useTelemetry } from "@/context/TelemetryContext";
 import type { AssessResponse } from "@/types/api";
 
@@ -23,6 +23,19 @@ export const Pay: React.FC = () => {
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null); // NEW: Dedicated error state
   const [loading, setLoading] = useState(false);
+  const [updatedBalance, setUpdatedBalance] = useState<number | null>(null);
+
+  // Refetches straight from the ledger (never trust the pre-transaction
+  // balance in local state) and only after the backend has actually settled
+  // the transfer -- so this is the ground truth, not an optimistic guess.
+  async function refreshBalance() {
+    try {
+      const bal = await getMyBalance();
+      setUpdatedBalance(bal.amount);
+    } catch {
+      // Non-fatal -- the transaction itself already succeeded.
+    }
+  }
 
   // The global click listener (mounted once at the app root, active on every
   // page) reads its target session id from TelemetryContext -- this just keeps
@@ -37,6 +50,7 @@ export const Pay: React.FC = () => {
     setLoading(true);
     setStatus(null);
     setError(null); // NEW: Clear previous errors
+    setUpdatedBalance(null);
 
     try {
       const res = await assessTransaction({
@@ -50,6 +64,7 @@ export const Pay: React.FC = () => {
       switch (res.routing_decision) {
         case "approve":
           setStatus("Payment approved successfully.");
+          await refreshBalance();
           break;
 
         case "otp_verification":
@@ -93,6 +108,7 @@ export const Pay: React.FC = () => {
       await verifyOtp(result.transaction_id, otp);
 
       setStatus("OTP verified. Payment approved.");
+      await refreshBalance();
 
       setResult(null);
       setOtp("");
@@ -307,6 +323,11 @@ export const Pay: React.FC = () => {
                 <p className="mt-1 text-slate-400">
                   {status}
                 </p>
+                {updatedBalance !== null && (
+                  <p className="mt-2 text-sm font-medium text-slate-200">
+                    New balance: ${updatedBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </p>
+                )}
               </div>
             </div>
           </div>

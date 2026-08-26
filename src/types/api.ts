@@ -4,6 +4,10 @@ export interface BalanceOut {
   updated_at: string;
 }
 
+export interface CustomerStatusOut {
+  is_blocked: boolean;
+}
+
 export interface CustomerTransactionOut {
   id: string;
   name_orig: string;

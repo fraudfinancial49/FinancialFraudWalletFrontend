@@ -4,11 +4,12 @@ import {
   CreditCard,
   ArrowUpRight,
   ShieldCheck,
+  ShieldAlert,
   RefreshCw,
   Copy,
   CheckCircle2,
 } from "lucide-react";
-import { getMyBalance } from "@/api/client";
+import { getMyBalance, getMyStatus } from "@/api/client";
 import type { BalanceOut } from "@/types/api";
 
 export const Balance: React.FC = () => {
@@ -16,6 +17,7 @@ export const Balance: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
 
   // Retrieve the Account ID that was saved during login/registration
   const accountId = localStorage.getItem("customer_account_id") || "Unknown Account";
@@ -27,6 +29,11 @@ export const Balance: React.FC = () => {
       .then(setBalance)
       .catch(() => setError("Unable to reach the backend. It may be waking up."))
       .finally(() => setLoading(false));
+    // Independent of the balance fetch -- a failure here shouldn't block the
+    // rest of the page, so it fails silently and just leaves isBlocked as-is.
+    getMyStatus()
+      .then((s) => setIsBlocked(s.is_blocked))
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -117,19 +124,31 @@ export const Balance: React.FC = () => {
           </div>
 
           <div className="panel p-5">
-            <ShieldCheck className="mb-4 h-7 w-7 text-risk-low" />
+            {isBlocked ? (
+              <ShieldAlert className="mb-4 h-7 w-7 text-risk-high" />
+            ) : (
+              <ShieldCheck className="mb-4 h-7 w-7 text-risk-low" />
+            )}
 
             <h3 className="text-lg font-semibold text-slate-100">
               Security Status
             </h3>
 
             <p className="mt-2 text-sm text-slate-400">
-              AI Fraud Protection is active for your account.
+              {isBlocked
+                ? "Your account has been blocked. Contact support for assistance."
+                : "AI Fraud Protection is active for your account."}
             </p>
 
-            <div className="badge inline-block mt-5 bg-risk-low/15 text-risk-low">
-              Protected
-            </div>
+            {isBlocked ? (
+              <div className="badge inline-block mt-5 bg-risk-high/15 text-risk-high">
+                Blocked
+              </div>
+            ) : (
+              <div className="badge inline-block mt-5 bg-risk-low/15 text-risk-low">
+                Protected
+              </div>
+            )}
           </div>
 
           <div className="panel p-5">

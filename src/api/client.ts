@@ -1,5 +1,6 @@
 import axios, { AxiosError } from "axios";
-import type { AssessResponse, BalanceOut, CustomerTransactionOut } from "@/types/api";
+import type { AssessResponse, BalanceOut, CustomerStatusOut, CustomerTransactionOut } from "@/types/api";
+import { getDeviceFingerprint } from "@/utils/fingerprint";
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://financialfraudbackend.onrender.com";
 
@@ -39,7 +40,7 @@ export async function registerCustomer(name: string, email: string, password: st
     full_name: name, 
     email, 
     password,
-    opening_balance: 2000.00 // <-- THIS TELLS THE DATABASE TO START AT $2,000
+    opening_balance: 2000.00 // Opening balance for new customer accounts
   });
   return data;
 }
@@ -61,6 +62,11 @@ export async function getMyBalance(): Promise<BalanceOut> {
   return data;
 }
 
+export async function getMyStatus(): Promise<CustomerStatusOut> {
+  const { data } = await apiClient.get<CustomerStatusOut>("/api/v1/customer/me/status");
+  return data;
+}
+
 export async function getMyTransactions(page = 1, pageSize = 25): Promise<CustomerTransactionOut[]> {
   const { data } = await apiClient.get<CustomerTransactionOut[]>("/api/v1/customer/me/transactions", {
     params: { page, page_size: pageSize },
@@ -71,7 +77,11 @@ export async function getMyTransactions(page = 1, pageSize = 25): Promise<Custom
 export async function assessTransaction(payload: {
   nameDest: string; amount: number; type: string;
 }): Promise<AssessResponse> {
-  const { data } = await apiClient.post<AssessResponse>("/api/v1/transactions/assess", payload);
+  const { data } = await apiClient.post<AssessResponse>("/api/v1/transactions/assess", {
+    ...payload,
+    browser_fingerprint: getDeviceFingerprint(),
+    user_agent: typeof navigator !== "undefined" ? navigator.userAgent : undefined,
+  });
   return data;
 }
 
