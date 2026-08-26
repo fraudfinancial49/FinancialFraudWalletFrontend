@@ -1,4 +1,4 @@
-import logo from "@/assets/FinFraudShieldImg.png";
+import logo from "@/assets/finwallet-logo.png";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -43,12 +43,12 @@ export const Login: React.FC = () => {
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <img
             src={logo}
-            alt="FinFraudShield"
+            alt="FinWallet"
             className="h-24 w-24 object-contain"
           />
 
           <h1 className="text-2xl font-bold text-slate-50">
-            FinFraudShield
+            FinWallet
           </h1>
 
           <p className="max-w-xs text-sm text-slate-500">

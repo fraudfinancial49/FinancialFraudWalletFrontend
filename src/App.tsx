@@ -7,6 +7,7 @@ import { Login } from "@/pages/Login";
 import { Pay } from "@/pages/Pay";
 import { Balance } from "@/pages/Balance";
 import { History } from "@/pages/History";
+import logo from "@/assets/finwallet-logo.png";
 
 const Protected: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { accountId } = useAuth();
@@ -26,8 +27,8 @@ const Nav: React.FC = () => {
     <nav className="sticky top-0 z-10 border-b border-vault-800 bg-vault-900/80 backdrop-blur-sm">
       <div className="mx-auto flex max-w-6xl items-center gap-6 px-6 py-3">
         <div className="flex items-center gap-2 text-slate-100">
-          <Wallet className="h-5 w-5 text-accent-indigo" />
-          <span className="font-semibold tracking-tight">FinFraudShield</span>
+          <img src={logo} alt="FinWallet" className="h-7 w-7 rounded-full object-contain" />
+          <span className="font-semibold tracking-tight">FinWallet</span>
         </div>
 
         <div className="flex items-center gap-1">
