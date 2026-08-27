@@ -69,6 +69,10 @@ export const Pay: React.FC = () => {
 
         case "otp_verification":
           setStatus("OTP verification required.");
+          // Dev fallback: if email delivery failed, auto-fill the OTP input
+          if (res.otp_debug) {
+            setOtp(res.otp_debug);
+          }
           break;
 
         case "auto_reject":
@@ -242,6 +246,13 @@ export const Pay: React.FC = () => {
                   We've sent a one-time password to your
                   registered email address.
                 </p>
+
+                {/* Dev notice: shown only when email failed and OTP was auto-filled */}
+                {result?.otp_debug && (
+                  <p className="mt-2 text-xs font-mono text-yellow-300 bg-yellow-900/40 rounded px-2 py-1">
+                    ⚠️ Dev mode: email delivery failed. OTP auto-filled: <strong>{result.otp_debug}</strong>
+                  </p>
+                )}
               </div>
 
               <div>
