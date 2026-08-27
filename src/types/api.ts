@@ -29,6 +29,4 @@ export interface AssessResponse {
   honeypot_session_id?: string | null;
   individual_scores?: Record<string, number> | null;
   fusion_weights?: Record<string, number> | null;
-  /** Present only in non-production when email delivery fails — auto-fills the OTP input */
-  otp_debug?: string | null;
 }
